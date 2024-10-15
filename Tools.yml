@@ -1,0 +1,580 @@
+#version: '3.9'
+
+x-jupyter_Notebook: &temp-jupyter_Notebook
+  restart: always # unless-stopped
+  ports:
+    - "8888:8888"
+  volumes:
+    - ./data/DS_Jupyter/data:/home/jovyan/work
+  networks:
+    - Docker_PublicNetwork_Test
+    - DataScience_Network
+  # deploy:
+  #   resources:
+  #     limits:
+  #       cpus: "1.0"  # Maksimum CPU kullanımı 1 CPU
+  #       memory: 4g  # Maksimum bellek 512MB
+  #     reservations:
+  #       cpus: "0.5"  # Minimum rezervasyon CPU
+  #       memory: 50M  # Minimum rezervasyon bellek
+  runtime: nvidia  # GPU kullanımını etkinleştirmek için
+  # depends_on:
+  #   - other_servis
+  # env_file:
+  #   - ./config/.env.test
+  environment:
+    # - UID=0
+    - UID=1000
+    - GID=1000
+    - TZ=Europe/Istanbul
+    - JUPYTER_TOKEN=yourtoken  # Jupyter Notebook'a giriş için gerekli token
+    - JUPYTER_ENABLE_LAB=yes
+    - GRANT_SUDO=yes  # Sudo hakları vermek için
+    # - GRANT_SUDO="yes"
+    - NOTEBOOK_ARGS="--allow-root"
+  command: start-notebook.sh --NotebookApp.token=''
+services:
+  DS_Rstudio_Server_Test:
+    image: rocker/rstudio:latest
+    # build:
+    #   context: ./config/
+    #   dockerfile: Dockerfile_Test.Dockerfile
+    container_name: DS_Rstudio_Server_Test
+    restart: always # unless-stopped
+    ports:
+      - "8788:8787"
+    volumes:
+      - ./data/DS_Rstudio/data:/home/rstudio  # Kullanıcı verileri için volume
+      - ./data/DS_Rstudio/packages:/usr/local/lib/R/site-library  # R paketleri için volume
+    networks:
+      - Docker_PublicNetwork_Test
+      - DataScience_Network
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: "1.0"  # Maksimum CPU kullanımı 1 CPU
+    #       memory: 4g  # Maksimum bellek 512MB
+    #     reservations:
+    #       cpus: "0.5"  # Minimum rezervasyon CPU
+    #       memory: 50M  # Minimum rezervasyon bellek
+    # runtime: nvidia  # GPU kullanımını etkinleştirmek için
+    # depends_on:
+    #   - other_servis
+    # env_file:
+    #   - ./config/.env.test
+    environment:
+      - UID=1000
+      - GID=1000
+      - TZ=Europe/Istanbul
+      - PASSWORD=yourpassword  # RStudio'ya giriş için gerekli şifre
+      - ROOT=TRUE  # Root erişimi sağlamak için
+      - DISABLE_AUTH=true #true
+      # MySQL bağlantı bilgileri
+      - MYSQL_HOST= DS_MysqlDB_Test
+      - MYSQL_PORT=3306
+      - MYSQL_DATABASE=mydb
+      - MYSQL_USER=myuser
+      - MYSQL_PASSWORD=mypassword
+    # command: R test.R
+    profiles:
+      - Rstudio
+
+  DS_Shiny_Server_Test:
+    image: rocker/shiny:latest
+    # build:
+    #   context: ./config/
+    #   dockerfile: Dockerfile_Test.Dockerfile
+    container_name: DS_Shiny_Server_Test
+    restart: always # unless-stopped
+    ports:
+      - "3838:3838"
+    volumes:
+      - ./data/DS_Shiny/data:/srv/shiny-server # Kullanıcı verileri için volume
+      - ./data/DS_Shiny/packages:/home/rstudio/R/library # R paketleri için volume
+    networks:
+      - Docker_PublicNetwork_Test
+      - DataScience_Network
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: "1.0"  # Maksimum CPU kullanımı 1 CPU
+    #       memory: 4g  # Maksimum bellek 512MB
+    #     reservations:
+    #       cpus: "0.5"  # Minimum rezervasyon CPU
+    #       memory: 50M  # Minimum rezervasyon bellek
+    # runtime: nvidia  # GPU kullanımını etkinleştirmek için
+    # depends_on:
+    #   - other_servis
+    # env_file:
+    #   - ./config/.env.test
+    # environment:
+    #   - PASSWORD=yourpassword  # RStudio'ya giriş için gerekli şifre
+    #   - ROOT=TRUE  # Root erişimi sağlamak için
+    # command: python test.py
+    profiles:
+      - Shiny
+##########################################
+  DS_jupyter_Notebook_Datascience_Test:
+    <<: *temp-jupyter_Notebook
+    image: jupyter/datascience-notebook # Veri analizi için kapsamlı sürüm
+    container_name: DS_jupyter_Notebook_Datascience_Test
+    restart: always # unless-stopped
+    ports:
+      - "8888:8888"
+    profiles:
+      - Jupyter_Datascience
+#####################
+  DS_jupyter_Notebook_Tensorflow_Test:
+    <<: *temp-jupyter_Notebook 
+    image: jupyter/tensorflow-notebook:latest # Veri analizi için kapsamlı sürüm
+    container_name: DS_jupyter_Notebook_Tensorflow_Test
+    restart: always # unless-stopped
+    ports:
+      - "8889:8888"
+    profiles:
+      - Jupyter_Tensorflow
+#####################
+  DS_jupyter_Notebook_Scipy_Test:
+    <<: *temp-jupyter_Notebook 
+    image: jupyter/scipy-notebook:latest # Veri analizi için kapsamlı sürüm
+    container_name: DS_jupyter_Notebook_Scipy_Test
+    restart: always # unless-stopped
+    ports:
+      - "8890:8888"
+    profiles:
+      - Jupyter_Scipy
+#####################
+  DS_jupyter_Notebook_AllSpark_Test:
+    <<: *temp-jupyter_Notebook 
+    image: jupyter/all-spark-notebook:latest # Veri analizi için kapsamlı sürüm
+    container_name: DS_jupyter_Notebook_AllSpark_Test
+    restart: always # unless-stopped
+    ports:
+      - "8891:8888"
+    profiles:
+      - Jupyter_AllSpark
+#####################
+#####################
+##########################################
+  DS_Zeppelin_Notebook_Test:
+    image: apache/zeppelin:0.10.0
+    # build:
+    #   context: ./config/
+    #   dockerfile: Dockerfile_Test.Dockerfile
+    container_name: DS_Zeppelin_Notebook_Test
+    restart: always # unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data/DS_Zeppelin/data:/zeppelin
+    networks:
+      - Docker_PublicNetwork_Test
+      - DataScience_Network
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: "1.0"  # Maksimum CPU kullanımı 1 CPU
+    #       memory: 4g  # Maksimum bellek 512MB
+    #     reservations:
+    #       cpus: "0.5"  # Minimum rezervasyon CPU
+    #       memory: 50M  # Minimum rezervasyon bellek
+    # runtime: nvidia  # GPU kullanımını etkinleştirmek için
+    # depends_on:
+    #   - other_servis
+    # env_file:
+    #   - ./config/.env.test
+    environment:
+      - UID=1000
+      - GID=1000
+      - TZ=Europe/Istanbul  
+
+      - ZEPPELIN_NOTEBOOK_DIR:/zeppelin/notebook  # Jupyter Notebook'a giriş için gerekli token
+    # command: python test.py
+    profiles:
+      - Zeppelin
+
+##########################################
+  DS_Code_Server_Test:
+    image: codercom/code-server:latest
+    # build:
+    #   context: ./config/
+    #   dockerfile: Dockerfile_Test.Dockerfile
+    container_name: DS_Code_Server_Test
+    restart: always # unless-stopped
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./data/DS_Code_Server/data:/home/coder/project 
+    networks:
+      - Docker_PublicNetwork_Test
+      - DataScience_Network
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: "1.0"  # Maksimum CPU kullanımı 1 CPU
+    #       memory: 4g  # Maksimum bellek 512MB
+    #     reservations:
+    #       cpus: "0.5"  # Minimum rezervasyon CPU
+    #       memory: 50M  # Minimum rezervasyon bellek
+    # runtime: nvidia  # GPU kullanımını etkinleştirmek için
+    # depends_on:
+    #   - other_servis
+    # env_file:
+    #   - ./config/.env.test
+    environment:
+      - UID=1000
+      - GID=1000
+      - TZ=Europe/Istanbul  
+
+      - PASSWORD=your_password 
+    # command: python test.py
+    profiles:
+      - Code_Server
+##########################################
+##########################################
+##########################################
+  DS_Metabase_Test:
+    image: metabase/metabase:latest
+    # build:
+    #   context: ./config/
+    #   dockerfile: Dockerfile_Test.Dockerfile
+    container_name: DS_Metabase_Test
+    restart: always # unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data/DS_Metabase/data:/metabase.db
+    networks:
+      - Docker_PublicNetwork_Test
+      - DataScience_Network
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: "1.0"  # Maksimum CPU kullanımı 1 CPU
+    #       memory: 4g  # Maksimum bellek 512MB
+    #     reservations:
+    #       cpus: "0.5"  # Minimum rezervasyon CPU
+    #       memory: 50M  # Minimum rezervasyon bellek
+    # runtime: nvidia  # GPU kullanımını etkinleştirmek için
+    # depends_on:
+    #   - other_servis
+    # env_file:
+    #   - ./config/.env.test
+    environment:
+      - UID=1000
+      - GID=1000
+      - TZ=Europe/Istanbul  
+
+      - MB_DB_FILE=/metabase.db
+    # command: python test.py
+    profiles:
+      - Metabase
+
+##########################################
+  DS_Grafana_Test:
+    image: grafana/grafana:latest
+    # build:
+    #   context: ./config/
+    #   dockerfile: Dockerfile_Test.Dockerfile
+    container_name: DS_Grafana_Test
+    restart: always # unless-stopped
+    ports:
+      - "3001:3000"
+    volumes:
+      - ./data/DS_Grafana/data:/var/lib/grafana
+    networks:
+      - Docker_PublicNetwork_Test
+      - DataScience_Network
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: "1.0"  # Maksimum CPU kullanımı 1 CPU
+    #       memory: 4g  # Maksimum bellek 512MB
+    #     reservations:
+    #       cpus: "0.5"  # Minimum rezervasyon CPU
+    #       memory: 50M  # Minimum rezervasyon bellek
+    # runtime: nvidia  # GPU kullanımını etkinleştirmek için
+    # depends_on:
+    #   - other_servis
+    # env_file:
+    #   - ./config/.env.test
+    environment:
+      - UID=1000
+      - GID=1000
+      - TZ=Europe/Istanbul  
+
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_USER=admin
+    # command: #python test.py
+    profiles:
+      - Grafana
+
+##########################################
+##########################################
+##########################################
+  DS_MysqlDB_Test:
+    image: mysql:latest
+    # build:
+    #   context: ./config/
+    #   dockerfile: Dockerfile_Test.Dockerfile
+    container_name: DS_MysqlDB_Test
+    restart: always # unless-stopped
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./data/DS_MysqlDB/data:/var/lib/mysql
+    networks:
+      # - Docker_PublicNetwork_Test
+      - DataScience_Network
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: "1.0"  # Maksimum CPU kullanımı 1 CPU
+    #       memory: 4g  # Maksimum bellek 512MB
+    #     reservations:
+    #       cpus: "0.5"  # Minimum rezervasyon CPU
+    #       memory: 50M  # Minimum rezervasyon bellek
+    # runtime: nvidia  # GPU kullanımını etkinleştirmek için
+    # depends_on:
+    #   - other_servis
+    # env_file:
+    #   - ./config/.env.test
+    environment:
+      - UID=1000
+      - GID=1000
+      - TZ=Europe/Istanbul
+
+      - MYSQL_ROOT_PASSWORD=rootpassword
+      - MYSQL_DATABASE=mydb
+      - MYSQL_USER=myuser
+      - MYSQL_PASSWORD=mypassword
+    # command: python test.py
+    profiles:
+      - Mysql_DB
+##########################################
+  DS_MariaDB_Test:
+    image: mariadb:latest
+    # build:
+    #   context: ./config/
+    #   dockerfile: Dockerfile_Test.Dockerfile
+    container_name: DS_MariaDB_Test
+    restart: always # unless-stopped
+    ports:
+      - "3307:3306"
+    volumes:
+      - ./data/DS_MariaDB/data:/var/lib/mysql
+    networks:
+      # - Docker_PublicNetwork_Test
+      - DataScience_Network
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: "1.0"  # Maksimum CPU kullanımı 1 CPU
+    #       memory: 4g  # Maksimum bellek 512MB
+    #     reservations:
+    #       cpus: "0.5"  # Minimum rezervasyon CPU
+    #       memory: 50M  # Minimum rezervasyon bellek
+    # runtime: nvidia  # GPU kullanımını etkinleştirmek için
+    # depends_on:
+    #   - other_servis
+    # env_file:
+    #   - ./config/.env.test
+    environment:
+      - UID=1000
+      - GID=1000
+      - TZ=Europe/Istanbul  
+
+      - MYSQL_ROOT_PASSWORD=rootpassword
+      - MYSQL_DATABASE=mydb
+      - MYSQL_USER=myuser
+      - MYSQL_PASSWORD=mypassword
+    # command: python test.py
+    profiles:
+      - MariaDB
+##########################################
+  DS_PostgresDB_Test:
+    image: postgres:latest
+    # build:
+    #   context: ./config/
+    #   dockerfile: Dockerfile_Test.Dockerfile
+    container_name: DS_PostgresDB_Test
+    restart: always # unless-stopped
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data/DS_PostgresDB/data:/var/lib/postgresql/data
+    networks:
+      # - Docker_PublicNetwork_Test
+      - DataScience_Network
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: "1.0"  # Maksimum CPU kullanımı 1 CPU
+    #       memory: 4g  # Maksimum bellek 512MB
+    #     reservations:
+    #       cpus: "0.5"  # Minimum rezervasyon CPU
+    #       memory: 50M  # Minimum rezervasyon bellek
+    # runtime: nvidia  # GPU kullanımını etkinleştirmek için
+    # depends_on:
+    #   - other_servis
+    # env_file:
+    #   - ./config/.env.test
+    environment:
+      - UID=1000
+      - GID=1000
+      - TZ=Europe/Istanbul  
+
+      - POSTGRES_USER=pguser
+      - POSTGRES_PASSWORD=pgpassword
+      - POSTGRES_DB=pgdb
+    # command: python test.py
+    profiles:
+      - PostgresDB
+##########################################
+  DS_MongoDB_Test:
+    image: mongo:latest
+    # build:
+    #   context: ./config/
+    #   dockerfile: Dockerfile_Test.Dockerfile
+    container_name: DS_MongoDB_Test
+    restart: always # unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./data/DS_MongoDB/data:/data/db
+    networks:
+      # - Docker_PublicNetwork_Test
+      - DataScience_Network
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: "1.0"  # Maksimum CPU kullanımı 1 CPU
+    #       memory: 4g  # Maksimum bellek 512MB
+    #     reservations:
+    #       cpus: "0.5"  # Minimum rezervasyon CPU
+    #       memory: 50M  # Minimum rezervasyon bellek
+    # runtime: nvidia  # GPU kullanımını etkinleştirmek için
+    # depends_on:
+    #   - other_servis
+    # env_file:
+    #   - ./config/.env.test
+    environment:
+      - UID=1000
+      - GID=1000
+      - TZ=Europe/Istanbul  
+
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=example
+    # command: python test.py
+    profiles:
+      - MongoDB
+##########################################
+  DS_Cassandra_Test:
+    image: cassandra:latest
+    # build:
+    #   context: ./config/
+    #   dockerfile: Dockerfile_Test.Dockerfile
+    container_name: DS_Cassandra_Test
+    restart: always # unless-stopped
+    ports:
+      - "9042:9042"
+    volumes:
+      - ./data/DS_Cassandra/data:/var/lib/cassandra
+    networks:
+      # - Docker_PublicNetwork_Test
+      - DataScience_Network
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: "1.0"  # Maksimum CPU kullanımı 1 CPU
+    #       memory: 4g  # Maksimum bellek 512MB
+    #     reservations:
+    #       cpus: "0.5"  # Minimum rezervasyon CPU
+    #       memory: 50M  # Minimum rezervasyon bellek
+    # runtime: nvidia  # GPU kullanımını etkinleştirmek için
+    # depends_on:
+    #   - other_servis
+    # env_file:
+    #   - ./config/.env.test
+    environment:
+      - UID=1000
+      - GID=1000
+      - TZ=Europe/Istanbul  
+
+      - CASSANDRA_CLUSTER_NAME=myCluster
+      - CASSANDRA_NUM_TOKENS=256
+      - CASSANDRA_RPC_ADDRESS=0.0.0.0
+      - CASSANDRA_START_RPC=true
+    # command: python test.py
+    profiles:
+      - Cassandra
+##########################################
+  DS_ElasticSearch_Test:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.3.0
+    # build:
+    #   context: ./config/
+    #   dockerfile: Dockerfile_Test.Dockerfile
+    container_name: DS_ElasticSearch_Test
+    restart: always # unless-stopped
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - ./data/DS_ElasticSearch/data:/usr/share/elasticsearch/data
+    networks:
+      # - Docker_PublicNetwork_Test
+      - DataScience_Network
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: "1.0"  # Maksimum CPU kullanımı 1 CPU
+    #       memory: 4g  # Maksimum bellek 512MB
+    #     reservations:
+    #       cpus: "0.5"  # Minimum rezervasyon CPU
+    #       memory: 50M  # Minimum rezervasyon bellek
+    # runtime: nvidia  # GPU kullanımını etkinleştirmek için
+    # depends_on:
+    #   - other_servis
+    # env_file:
+    #   - ./config/.env.test
+    environment:
+      - UID=1000
+      - GID=1000
+      - TZ=Europe/Istanbul  
+
+      - discovery.type=single-node
+    # command: python test.py
+    profiles:
+      - ElasticSearch
+##########################################
+
+##########################################
+
+##########################################
+
+####################################################################################
+####################################################################################
+####################################################################################
+# volumes:
+  # DS_rstudio_data:
+  #   external: true
+networks:
+  DataScience_Network:
+    driver: bridge
+    internal: true  # Bu ayar, ağı dış dünyadan izole eder
+    # external: true  # Önceden oluşturduğunuz overlay ağına bağlanıyor
+    name: DataScience_Network  # Ağa özel bir isim verilir
+  Docker_PublicNetwork_Test:
+    external: true  # Önceden oluşturduğunuz overlay ağına bağlanıyor
+####################################################################################
+# Microsoft SQL Server
+# Oracle Database
+
+
+
+
+
+
+
+
+

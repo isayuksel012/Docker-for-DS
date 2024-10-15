@@ -1,0 +1,105 @@
+#####################################################################################
+docker network create --driver bridge Docker_PublicNetwork_Test
+
+#####################################################################################
+### IDE ve kodlama araçları
+#####################
+#Rstudio Server#
+
+docker-compose -f Tools.yml --profile Rstudio up -d
+
+#Tarayıcı bağlantı adresi
+http://localhost:8788/
+rstudio  yourpassword
+
+docker stop DS_Rstudio_Server_Test # Sadece durdurmak için
+docker rm DS_Rstudio_Server_Test # Sistemden silmek için
+#####################
+#Shiny Server#
+
+docker-compose -f Tools.yml --profile Shiny up -d
+
+#Tarayıcı bağlantı adresi
+http://localhost:3838/
+
+docker stop DS_Shiny_Server_Test # Sadece durdurmak için
+docker rm DS_Shiny_Server_Test # Sistemden silmek için
+#####################
+#Jupyter#
+
+docker-compose -f Tools.yml --profile Jupyter_Datascience up -d
+docker-compose -f Tools.yml --profile Jupyter_Tensorflow up -d
+docker-compose -f Tools.yml --profile Jupyter_Scipy up -d
+docker-compose -f Tools.yml --profile Jupyter_AllSpark up -d
+
+JUPYTER_TOKEN=yourtoken
+username=jovyan
+password=jovyan
+#
+Jupyter Notebook Datascience_Test: 
+http://localhost:8888
+#
+Jupyter Notebook Tensorflow_Test: 
+http://localhost:8889
+#
+Jupyter Notebook Scipy_Test: 
+http://localhost:8890
+#
+Jupyter Notebook AllSpark_Test: 
+http://localhost:8891
+
+
+docker stop DS_jupyter_Notebook_Datascience_Test # Sadece durdurmak için
+docker rm DS_jupyter_Notebook_Datascience_Test # Sistemden silmek için
+#####################
+#Zeppelin Notebook#
+
+docker-compose -f Tools.yml --profile Zeppelin up -d
+#
+Zeppelin Notebook
+http://localhost:8080
+
+docker stop DS_Zeppelin_Notebook_Test # Sadece durdurmak için
+docker rm DS_Zeppelin_Notebook_Test # Sistemden silmek için
+#####################
+#Zeppelin Notebook#
+
+docker-compose -f Tools.yml --profile Code_Server up -d
+#
+Code Server
+http://localhost:8080
+
+docker stop DS_Code_Server_Test # Sadece durdurmak için
+docker rm DS_Code_Server_Test # Sistemden silmek için
+
+#####################
+
+
+
+
+#####################################################################################
+### IDE ve kodlama araçları
+#####################
+
+
+DS_Metabase
+DS_Grafana
+
+
+
+#####################################################################################
+### Veri tabanları
+#####################
+
+DS_MysqlDB
+DS_MariaDB
+DS_PostgresDB
+DS_MongoDB
+DS_Cassandra
+DS_ElasticSearch
+
+
+
+
+
+
